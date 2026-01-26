@@ -33,11 +33,9 @@ bigint& bigint::operator+=(const bigint& rhs) {
 	std::string	result;
 	int			i = _digits.size() - 1;
 	int			j = rhs._digits.size() - 1;
-	int			carry = 0;
+	int			sum = 0;
 
-	while (i >= 0 || j >= 0 || carry) {
-
-		int sum = carry;
+	while (i >= 0 || j >= 0 || sum) {
 
 		if (i >= 0)
 			sum += _digits[i--] - '0';
@@ -45,7 +43,7 @@ bigint& bigint::operator+=(const bigint& rhs) {
 			sum += rhs._digits[j--] - '0';
 		
 		result.insert(result.begin(), static_cast<char>('0' + (sum % 10)));
-		carry = sum / 10;
+		sum /= 10;
 	}
 
 	_digits = result;
@@ -146,8 +144,7 @@ bool bigint::operator<(const bigint& rhs) const {
 bool bigint::operator>(const bigint& rhs) const {
 
 	if (_digits.size() != rhs._digits.size())
-		return
-			_digits.size() > rhs._digits.size();
+		return _digits.size() > rhs._digits.size();
 
 	return _digits > rhs._digits;
 }
