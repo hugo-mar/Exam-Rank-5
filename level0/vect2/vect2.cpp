@@ -1,10 +1,20 @@
 #include "vect2.hpp"
 
-vect2::vect2() : _x(0), _y(0) {}
 
-vect2::vect2(int x, int y) : _x(x), _y(y) {}
+vect2::vect2()
+	: _x(0), _y(0)
+{}
 
-vect2::vect2(const vect2& other) : _x(other._x), _y(other._y) {}
+
+vect2::vect2(int x, int y)
+	: _x(x), _y(y)
+{}
+
+
+vect2::vect2(const vect2& other)
+	: _x(other._x), _y(other._y)
+{}
+
 
 vect2& vect2::operator=(const vect2& other) {
 
@@ -16,22 +26,31 @@ vect2& vect2::operator=(const vect2& other) {
 	return *this;
 }
 
-vect2::~vect2() {}
+
+vect2::~vect2()
+{}
+
 
 vect2 vect2::operator+(const vect2& rhs) const {
 
 	return vect2(_x + rhs._x, _y + rhs._y);
+
 }
+
 
 vect2 vect2::operator-(const vect2& rhs) const {
 
 	return vect2(_x - rhs._x, _y - rhs._y);
+
 }
+
 
 vect2 vect2::operator*(int scalar) const {
 
 	return vect2(_x * scalar, _y * scalar);
+
 }
+
 
 vect2&	vect2::operator+=(const vect2& rhs) {
 
@@ -50,6 +69,7 @@ vect2&	vect2::operator-=(const vect2& rhs) {
 	return *this;
 }
 
+
 vect2&	vect2::operator*=(int scalar) {
 
 	_x = _x * scalar;
@@ -58,10 +78,12 @@ vect2&	vect2::operator*=(int scalar) {
 	return *this;
 }
 
+
 vect2	vect2::operator-() const {
 
 	return vect2(-_x, -_y);
 }
+
 
 vect2&	vect2::operator++() {
 
@@ -70,6 +92,7 @@ vect2&	vect2::operator++() {
 
 	return *this;
 }
+
 
 vect2	vect2::operator++(int) {
 
@@ -80,6 +103,7 @@ vect2	vect2::operator++(int) {
 	return tmp;
 }
 
+
 vect2&	vect2::operator--() {
 
 	--_x;
@@ -87,6 +111,7 @@ vect2&	vect2::operator--() {
 
 	return *this;
 }
+
 
 vect2	vect2::operator--(int) {
 
@@ -97,20 +122,24 @@ vect2	vect2::operator--(int) {
 	return tmp;
 }
 
+
 bool	vect2::operator==(const vect2& rhs) const {
 
 	return _x == rhs._x && _y == rhs._y;
 }
+
 
 bool	vect2::operator!=(const vect2& rhs) const {
 
 	return !(*this == rhs);
 }
 
+
 int&		vect2::operator[](int i) {
 
 	return i == 0 ? _x : _y;
 }
+
 
 const int&	vect2::operator[](int i) const {
 
