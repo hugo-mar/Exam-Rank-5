@@ -124,40 +124,53 @@ void print_board(char** board)
 
 int count_neighbours(game_t* g, int x, int y)
 {
-	int	neighbours = 0;
+	int	n = 0;
 
-	if (x != 0 && y != 0 && g->board[y - 1][x - 1] == 'O') ++neighbours;
-	if (y != 0 && g->board[y - 1][x] == 'O') ++neighbours;
-	if (x + 1 != g->w && y != 0 && g->board[y - 1][x + 1] == 'O') ++neighbours;
+	for (int dy = -1; dy <= 1; ++dy)
+	{
+		for (int dx = -1; dx <= 1; dx++)
+		{
+			if (dx == 0 && dy == 0)
+				continue;
 
-	if (x != 0 && g->board[y][x - 1] == 'O') ++neighbours;
-	if (x + 1 != g->w && g->board[y][x + 1] == 'O') ++neighbours;
+			int nx = x + dx;
+			int ny = y + dy;
 
-	if (x != 0 && y + 1 != g->h && g->board[y + 1][x - 1] == 'O') ++neighbours;
-	if (y + 1 != g->h && g->board[y + 1][x] == 'O') ++neighbours;
-	if (x + 1 != g->w && y + 1 != g->h && g->board[y + 1][x + 1] == 'O') ++neighbours;
+			if (nx < 0 || ny < 0 || nx >= g->w || ny >= g->h)
+				continue;
 
-	return neighbours;
+			if (g->board[ny][nx] == 'O')
+				++n;
+		}
+	}
+
+	return n;
 }
 
-void iterate_life(game_t* g)
+
+
+
+void simulate_life(game_t* g)
 {
 	for (int i = 0; i < g->it; ++i)
 	{
 		char** new_day = alloc_board(g->h, g->w);
 		if (!new_day)
 			return ;
+
 		for (int y = 0; y < g->h; ++y)
 		{
 			for (int x = 0; x < g->w; ++x)
 			{
 				int n = count_neighbours(g, x, y);
+		
 				if (g->board[y][x] == 'O')
-					 new_day[y][x] = (n == 2 || n == 3) ? 'O' : ' ';
+					new_day[y][x] = (n == 2 || n == 3) ? 'O' : ' ';
 				else
 					new_day[y][x] = (n == 3) ? 'O' : ' ';
 			}
 		}
+
 		ft_free(g->board);
 		g->board = new_day;
 	}
