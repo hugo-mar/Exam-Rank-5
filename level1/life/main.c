@@ -53,66 +53,54 @@ bool init_game(char **argv, game_t *g)
 	g->w = atoi(argv[1]);
 	g->h = atoi(argv[2]);
 	g->it = atoi(argv[3]);
-	
+
 	if (g->w <= 0 || g->h <= 0 || g->it < 0)
-	return false;
-	
+		return false;
+
 	g->board = alloc_board(g->h, g->w);
 	if (!g->board)
-	return false;
-	
-	g->sketch = malloc(SKETCH_MAX);
-	if (!g->sketch) {
-		ft_free(g->board);
 		return false;
-	}
-		
-	g->sk_size = read(0, g->sketch, SKETCH_MAX -1);
-	if (g->sk_size <= 0)
-		g->sketch[0] = '\0';
-	else
-		g->sketch[g->sk_size] = '\0';
 
 	return true;
 }
 
-void apply_sketch(game_t* g)
+void apply_sketch(game_t *g)
 {
 	bool	draw = false;
 	int		x = 0;
-	int 	y = 0;
+	int		y = 0;
+	char	c;
 
-	for (int i = 0; g->sketch[i]; ++i) {
-
-		switch (g->sketch[i])
+	while (read(0, &c, 1) == 1)
+	{
+		if (c == 'w')
 		{
-		case 'w':
 			if (y > 0)
 				--y;
-			break;
-		case 'a':
+		}
+		else if (c == 'a')
+		{
 			if (x > 0)
 				--x;
-			break;		
-		case 's':
+		}
+		else if (c == 's')
+		{
 			if (y < g->h - 1)
 				++y;
-			break;
-		case 'd':
-			if (x < g->w -1)
-				++x;
-			break;
-		case 'x':
-			draw = !draw;
-			break;
-		default:
-			break;
 		}
+		else if (c == 'd')
+		{
+			if (x < g->w - 1)
+				++x;
+		}
+		else if (c == 'x')
+			draw = !draw;
 
 		if (draw)
 			g->board[y][x] = 'O';
 	}
 }
+
 
 void print_board(char** board)
 {
@@ -147,16 +135,13 @@ int count_neighbours(game_t* g, int x, int y)
 	return n;
 }
 
-
-
-
 void simulate_life(game_t* g)
 {
 	for (int i = 0; i < g->it; ++i)
 	{
 		char** new_day = alloc_board(g->h, g->w);
 		if (!new_day)
-			return ;
+			return;
 
 		for (int y = 0; y < g->h; ++y)
 		{
@@ -182,12 +167,11 @@ int main (int argc, char **argv)
 
 	if (argc != 4 || init_game(argv, &g) == false)
 		return 1;
-	
+
 	apply_sketch(&g);
-	iterate_life(&g);
+	simulate_life(&g);
 	print_board(g.board);
 
 	ft_free(g.board);
-	free(g.sketch);
 	return 0;
 }
