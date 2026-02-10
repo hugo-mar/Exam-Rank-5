@@ -55,38 +55,38 @@ static bool is_printable(char c)
     return (c >= 32 && c <= 126);
 }
 
-bool read_header(FILE *in, t_bsq *bsq)
+bool read_header(FILE *in, t_bsq *b)
 {
-	if (fscanf(in, "%d %c %c %c\n", &bsq->h, &bsq->empty, &bsq->obstacle, &bsq->full) != 4)
+	if (fscanf(in, "%d %c %c %c\n", &b->h, &b->empty, &b->obstacle, &b->full) != 4)
 		return false;
-	if (bsq->h < 1)
+	if (b->h < 1)
 		return false;
-	if (!is_printable(bsq->empty) || !is_printable(bsq->obstacle) || !is_printable(bsq->full))
+	if (!is_printable(b->empty) || !is_printable(b->obstacle) || !is_printable(b->full))
 		return false;
-	if (bsq->empty == bsq->obstacle || bsq->empty == bsq->full || bsq->obstacle == bsq->full)
+	if (b->empty == b->obstacle || b->empty == b->full || b->obstacle == b->full)
 		return false;
 
 	return true;
 }
 
-bool alloc_grid(t_bsq *bsq)
+bool alloc_grid(t_bsq *b)
 {
-	bsq->grid = malloc(sizeof(char *) * (bsq->h + 1));
-	if (!bsq->grid)
+	b->grid = malloc(sizeof(char *) * (b->h + 1));
+	if (!b->grid)
 		return false;
 
-	for (int i = 0; i <= bsq->h; ++i)
-		bsq->grid[i] = NULL;
+	for (int i = 0; i <= b->h; ++i)
+		b->grid[i] = NULL;
 	
 	return true;
 }
 
-bool read_grid(FILE *in, t_bsq *bsq, char **line, size_t *cap)
+bool read_grid(FILE *in, t_bsq *b, char **line, size_t *cap)
 {
 	ssize_t n;
 
-	bsq->w = 0;
-	for (int i = 0; i < bsq->h; ++i)
+	b->w = 0;
+	for (int i = 0; i < b->h; ++i)
 	{
 		n = getline(line, cap, in);
 		if (n == -1)
@@ -99,21 +99,20 @@ bool read_grid(FILE *in, t_bsq *bsq, char **line, size_t *cap)
 		if (w < 1)
 			return false;
 
-		bsq->grid[i] = ft_strdup(*line);		/* duplicar a linha lida */
-		if (!bsq->grid[i])
+		b->grid[i] = ft_strdup(*line);			/* duplicar a linha lida */
+		if (!b->grid[i])
 			return false;
 
-		bsq->grid[i][w] = '\0';					/* remover o '\n' final para facilitar validação e DP */
+		b->grid[i][w] = '\0';					/* remover o '\n' final para facilitar validação e DP */
 
 		
-		if (bsq->w == 0)						/* a primeira linha define a largura do mapa */
-			bsq->w = w;
-		else if (bsq->w != w)					/* ...as seguintes têm de ter o mesmo tamanho */
+		if (b->w == 0)							/* a primeira linha define a largura do mapa */
+			b->w = w;
+		else if (b->w != w)						/* ...as seguintes têm de ter o mesmo tamanho */
 			return false;
 	}
 	return true;
 }
-
 
 bool check_eof(FILE *in, char **line, size_t *cap)
 {
@@ -129,11 +128,11 @@ bool check_eof(FILE *in, char **line, size_t *cap)
 	return true;
 }
 
-bool validate_chars(t_bsq *bsq)
+bool validate_chars(t_bsq *b)
 {
-	for (int i = 0; bsq->grid[i]; ++i)
-		for (int j = 0; j < bsq->w; ++j)
-			if (bsq->grid[i][j] != bsq->empty && bsq->grid[i][j] != bsq->obstacle)
+	for (int i = 0; b->grid[i]; ++i)
+		for (int j = 0; j < b->w; ++j)
+			if (b->grid[i][j] != b->empty && b->grid[i][j] != b->obstacle)
 				return false;
 	return true;
 }
@@ -143,6 +142,90 @@ static void map_error_cleanup(t_bsq *bsq, char *line)
 	ft_free(bsq->grid);
 	free(line);
 	fputs("map error\n", stderr);
+}
+
+void draw_square(t_bsq* b, int top_y, int top_x, int s)
+{
+	for (int y = top_y; y < top_y + s; ++y)
+		for (int x = top_x; x < top_x + s; ++x)
+			b->grid[y][x] = b->full;
+}
+
+void print_grid(t_bsq* b)
+{
+
+	for (int y = 0; y < b->h; ++y) {
+		fputs(b->grid[y], stdout);
+		fputs("\n", stdout);
+	}
+}
+
+int min3(int top, int left, int diag)
+{
+	int min = top;
+	if (left < min)	min = left;
+	if (diag < min)	min = diag;
+
+	return min;
+}
+
+bool solve_bsq_dp(t_bsq* b)
+{
+	int* prev = calloc((size_t)b->w, sizeof(int));
+	int* curr = calloc((size_t)b->w, sizeof(int));
+	if (!prev || !curr) {
+		free(prev);
+		free(curr);
+		return false;
+	}
+
+	int best_s = 0;
+	int best_top_y = 0;
+	int best_top_x = 0;
+
+	for (int y = 0; y < b->h; ++y)
+	{
+		for (int x = 0; x < b->w; ++x)
+		{
+			if (b->grid[y][x] == b->obstacle)
+				curr[x] = 0;
+			else if (x == 0 || y == 0)
+				curr[x] = 1;
+			else
+				curr[x] = 1 + min3(prev[x], curr[x - 1], prev[x - 1]);
+
+			int s = curr[x];
+			if (s > 0)
+			{
+				int top_y = y - s + 1;
+				int top_x = x - s + 1;
+				
+				if (s > best_s ||
+					(s == best_s && (top_y < best_top_y ||
+									(top_y == best_top_y && top_x < best_top_x))))
+				{
+					best_s = s;
+					best_top_y = top_y;
+					best_top_x = top_x;
+				}
+			}
+		}
+		for (int x = 0; x < b->w; ++x)
+		{
+			prev[x] = curr[x];
+			curr[x] = 0;
+		}
+	}
+
+	if (best_s > 0)
+		draw_square(b, best_top_y, best_top_x, best_s);
+
+	print_grid(b);
+
+	free(prev);
+	free(curr);
+
+	return true;
 }
 
 void bsq(FILE *input)
@@ -163,7 +246,11 @@ void bsq(FILE *input)
 		return;
 	}
 
-	/* aqui entra o algoritmo do maior quadrado */
+	if (!solve_bsq_dp(&bsq))
+	{
+		map_error_cleanup(&bsq, line);
+		return;
+	}
 
 	ft_free(bsq.grid);
 	free(line);
