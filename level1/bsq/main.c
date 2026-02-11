@@ -57,7 +57,7 @@ static bool is_printable(char c)
 
 bool read_header(FILE *in, t_bsq *b)
 {
-	if (fscanf(in, "%d %c %c %c\n", &b->h, &b->empty, &b->obstacle, &b->full) != 4)
+	if (fscanf(in, "%d %c %c %c", &b->h, &b->empty, &b->obstacle, &b->full) != 4)
 		return false;
 	if (b->h < 1)
 		return false;
@@ -66,6 +66,12 @@ bool read_header(FILE *in, t_bsq *b)
 	if (b->empty == b->obstacle || b->empty == b->full || b->obstacle == b->full)
 		return false;
 
+	int c;
+	while ((c = fgetc(in)) != '\n')
+	{
+		if (c == EOF)
+			return false;
+	}
 	return true;
 }
 
@@ -116,16 +122,7 @@ bool read_grid(FILE *in, t_bsq *b, char **line, size_t *cap)
 
 bool check_eof(FILE *in, char **line, size_t *cap)
 {
-	ssize_t n;
-
-	while ((n = getline(line, cap, in)) != -1)
-	{
-		if (n == 1 && (*line)[0] == '\n')		/* ignora linhas vazias extra */
-			continue;
-
-		return false;							/* se tiver qualquer outra coisa, é conteúdo extra */
-	}
-	return true;
+	return getline(line, cap, in) == -1;
 }
 
 bool validate_chars(t_bsq *b)
