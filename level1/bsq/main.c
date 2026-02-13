@@ -149,7 +149,6 @@ void draw_square(t_bsq* b, int top_y, int top_x, int s)
 
 void print_grid(t_bsq* b)
 {
-
 	for (int y = 0; y < b->h; ++y) {
 		fputs(b->grid[y], stdout);
 		fputs("\n", stdout);
