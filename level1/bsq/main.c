@@ -1,4 +1,5 @@
-#define _GNU_SOURCE
+// #define _GNU_SOURCE
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -15,7 +16,7 @@ typedef struct s_bsq
 
 void ft_free(char **grid)
 {
-	if (!grid)
+	if (!grid)						// Importante check inicial
 		return;
 
 	int i = 0;
@@ -26,7 +27,7 @@ void ft_free(char **grid)
 
 size_t ft_strlen(char *str)
 {
-	size_t len = 0;
+	size_t len = 0;				// size_t
 
 	while (str && str[len])
 		++len;
@@ -50,7 +51,7 @@ char *ft_strdup(char *str)
 	return dup;
 }
 
-static bool is_printable(char c)
+static bool is_printable(unsigned char c)		// unsigned
 {
     return (c >= 32 && c <= 126);
 }
@@ -87,7 +88,7 @@ bool alloc_grid(t_bsq *b)
 	return true;
 }
 
-bool read_grid(FILE *in, t_bsq *b, char **line, size_t *cap)
+bool read_grid(FILE *in, t_bsq *b, char **line, size_t *cap)	// Cap is size_t
 {
 	ssize_t n;
 
@@ -102,39 +103,37 @@ bool read_grid(FILE *in, t_bsq *b, char **line, size_t *cap)
 			return false;
 
 		int w = (int)(n - 1);					/* largura útil do mapa (exclui o newline final) */
-		if (w < 1)
+
+		if (b->w == 0)							/* a primeira linha define a largura do mapa */
+			b->w = w;
+		else if (b->w != w)						/* ...as seguintes têm de ter o mesmo tamanho */
 			return false;
 
 		b->grid[i] = ft_strdup(*line);			/* duplicar a linha lida */
 		if (!b->grid[i])
 			return false;
-
+		
 		b->grid[i][w] = '\0';					/* remover o '\n' final para facilitar validação e DP */
 
-		
-		if (b->w == 0)							/* a primeira linha define a largura do mapa */
-			b->w = w;
-		else if (b->w != w)						/* ...as seguintes têm de ter o mesmo tamanho */
-			return false;
 	}
+
+	n = getline(line, cap, in);
+	if (n != -1)
+		return false;
+		
 	return true;
 }
 
-bool check_eof(FILE *in, char **line, size_t *cap)
+bool validate_chars(t_bsq* b)
 {
-	return getline(line, cap, in) == -1;
-}
-
-bool validate_chars(t_bsq *b)
-{
-	for (int i = 0; b->grid[i]; ++i)
-		for (int j = 0; j < b->w; ++j)
-			if (b->grid[i][j] != b->empty && b->grid[i][j] != b->obstacle)
+	for (int y = 0; y < b->h; ++y)
+		for  (int x = 0; x < b->w; ++x)
+			if (b->grid[y][x] != b->empty && b->grid[y][x] != b->obstacle)
 				return false;
 	return true;
 }
 
-static void map_error_cleanup(t_bsq *bsq, char *line)
+void map_error_cleanup(t_bsq *bsq, char *line)
 {
 	ft_free(bsq->grid);
 	free(line);
@@ -227,23 +226,15 @@ bool solve_bsq_dp(t_bsq* b)
 
 void bsq(FILE *input)
 {
-	t_bsq  bsq;
+	t_bsq  bsq = {0};
 	char   *line = NULL;
 	size_t cap = 0;
-
-	bsq.grid = NULL;
 
 	if (!read_header(input, &bsq) ||
 		!alloc_grid(&bsq) ||
 		!read_grid(input, &bsq, &line, &cap) ||
-		!check_eof(input, &line, &cap) ||
-		!validate_chars(&bsq))
-	{
-		map_error_cleanup(&bsq, line);
-		return;
-	}
-
-	if (!solve_bsq_dp(&bsq))
+		!validate_chars(&bsq) ||
+		!solve_bsq_dp(&bsq))
 	{
 		map_error_cleanup(&bsq, line);
 		return;
