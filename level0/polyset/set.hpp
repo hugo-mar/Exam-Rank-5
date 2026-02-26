@@ -2,7 +2,6 @@
 # define SET_HPP
 
 # include "searchable_bag.hpp"
-# include <cstddef>
 
 class set
 {
